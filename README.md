@@ -24,7 +24,7 @@ environment.
 NOTE - you must run the source bin/activate or the pip install command will install the package
 globally - not to the local virtualenv.
 
-After running source bin/activte your shell prompt will change to indicate that you're running
+After running source bin/activate your shell prompt will change to indicate that you're running
 inside the virtualenv.
 
 At this point you should be able to run the application with...
@@ -33,7 +33,10 @@ At this point you should be able to run the application with...
 
 The output of that command should tell you to access the application at http://127.0.0.1:5000/
 
-## Usefull sites for reference
+## Useful sites for reference
 * [Bootstrap](http://getbootstrap.com/)
 * [AWS Setup 1](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create-deploy-python-common-steps.html)
 * [AWS Setup 2](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create-deploy-python-flask.html)
+
+
+**Testing access 
