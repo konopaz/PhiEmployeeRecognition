@@ -32,5 +32,22 @@ def login():
 
   return render_template('login.html')
 
+@application.route('/create')
+def create():
+  if 'username' in session:
+    return render_template('create.html')
+  return redirect(url_for('login'))
+
+@application.route('/view')
+def view():
+  if 'username' in session:
+    return render_template('view.html')
+  return redirect(url_for('login'))
+
+@application.route('/logout')
+def logout():
+  # log the user out and redirect to log in page
+  return redirect(url_for('login'))
+
 if __name__ == '__main__':
   application.run()
