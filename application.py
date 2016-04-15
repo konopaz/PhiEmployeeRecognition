@@ -1,5 +1,6 @@
 from flask import Flask, request, session, g, redirect, url_for, \
   abort, render_template, flash
+import functools
 import logging
 
 DEBUG = True
@@ -17,11 +18,19 @@ formatter = logging.Formatter(application.config['LOGGING_FORMAT'])
 handler.setFormatter(formatter)
 application.logger.addHandler(handler)
 
+def login_required(f):
+  @functools.wraps(f)
+  def decorator_function(*args, **kwargs):
+    if 'username' not in session:
+      application.logger.debug('auth redirect')
+      return redirect(url_for('login'))
+    return f(*args, **kwargs)
+  return decorator_function
+
+@login_required
 @application.route('/')
 def home():
-  if 'username' in session:
-    return render_template('home.html')
-  return redirect(url_for('login'))
+  return render_template('home.html')
 
 @application.route('/login', methods=['GET', 'POST'])
 def login():
@@ -32,21 +41,19 @@ def login():
 
   return render_template('login.html')
 
+@login_required
 @application.route('/create')
 def create():
-  if 'username' in session:
-    return render_template('create.html')
-  return redirect(url_for('login'))
+  return render_template('create.html')
 
+@login_required
 @application.route('/view')
 def view():
-  if 'username' in session:
-    return render_template('view.html')
-  return redirect(url_for('login'))
+  return render_template('view.html')
 
 @application.route('/logout')
 def logout():
-  # log the user out and redirect to log in page
+  session.clear()
   return redirect(url_for('login'))
 
 if __name__ == '__main__':

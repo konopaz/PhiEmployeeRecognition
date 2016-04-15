@@ -83,6 +83,8 @@
 
                      if(settings.invalidClass) {
                         if(tmpSelector) {
+                           console.log(tmpSelector);
+                           console.log($(tmpSelector));
                            $(tmpSelector).addClass(settings.invalidClass);
                         }
                         else {
