@@ -2,6 +2,7 @@ from flask import Flask, request, session, g, redirect, url_for, \
   abort, render_template, flash
 import functools
 import logging
+from forms import LoginForm
 
 DEBUG = True
 LOGGING_LOCATION = 'application.log'
@@ -39,12 +40,11 @@ def home():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-  if request.method == 'POST':
-    app.logger.debug('handling login post')
-    session['username'] = request.form['username']
+  form = LoginForm(request.form)
+  if request.method == 'POST' and form.validate():
+    session['username'] = form.username.data
     return redirect(url_for('home'))
-
-  return render_template('login.html')
+  return render_template('login.html', form=form)
 
 @app.route('/create')
 @login_required()
