@@ -2,7 +2,8 @@ from flask import Flask, request, session, g, redirect, url_for, \
   abort, render_template, flash
 import functools
 import logging
-from forms import LoginForm
+from forms import LoginForm, CreateCertificateForm
+from datetime import datetime
 
 DEBUG = True
 LOGGING_LOCATION = 'application.log'
@@ -49,12 +50,27 @@ def login():
 @app.route('/create')
 @login_required()
 def create():
-  return render_template('create.html')
+    form = CreateCertificateForm()
+    #prefill form with user's username (should be their email)
+    form.awardCreatorEmail.data = session['username']
+    form.awardDateTime.data = datetime.utcnow()
+    return render_template('create.html', form=form)
 
 @app.route('/view')
 @login_required()
 def view():
   return render_template('view.html')
+
+@app.route('/confirmcert', methods=['GET', 'POST'])
+@login_required()
+def confirmcert():
+    form = CreateCertificateForm(request.form)
+    if request.method == 'POST':
+        certData = form.awardType.data, form.awardRecipientName.data, form.awardRecipientEmail.data, form.awardCreatorEmail.data, form.awardDateTime.data
+        app.logger.info("Certificate Data = ", certData)
+        # return redirect(url_for('confirmcert'), info="green")
+        return render_template('confirmcert.html', certData=certData)
+    return redirect(url_for('create'))
 
 @app.route('/logout')
 def logout():

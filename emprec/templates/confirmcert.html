@@ -1,0 +1,30 @@
+{% extends "home.html" %}
+{% block content %}
+<div class="container">
+  <h4>Success! You have created an award with the following information:</h4>
+  <table class="table table-bordered" style="width:50%;">
+    <tr>
+      <td><b>Award Type</b></td>
+      <td>{{ certData[0] }}</td>
+    </tr>
+  <tr>
+    <td><b>Recipient Name</b></td>
+    <td> {{ certData[1] }}</td>
+  </tr>
+  <tr>
+    <td><b>Recipient Email</b></td>
+    <td> {{ certData[2] }}</td>
+  </tr>
+  <tr>
+    <td><b>Your Email</b></td>
+    <td> {{ certData[3] }}</td>
+  </tr>
+  <tr>
+    <td><b>Date/Time</b></td>
+    <td> {{ certData[4] }}</td>
+  </tr>
+</table>
+<button type="submit" class="btn btn-primary"><a href="{{ url_for('create') }}" style="color:white;">Create Another Certificate</a></button>
+</div>
+
+{% endblock %}
