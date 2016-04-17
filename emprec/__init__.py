@@ -1,11 +1,13 @@
-from flask import Flask, request, session, g, redirect, url_for, \
-  abort, render_template, flash
 import functools
 import logging
+import sqlite3
+from flask import Flask, request, session, g, redirect, url_for, \
+  abort, render_template, flash
 from forms import LoginForm, CreateCertificateForm
 from datetime import datetime
 
 DEBUG = True
+DATABASE = './emprec.db'
 LOGGING_LOCATION = 'application.log'
 LOGGING_LEVEL = logging.DEBUG
 LOGGING_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -33,6 +35,10 @@ def login_required():
     return wrapped
   return wrapper
 
+@app.before_request
+def before_request():
+    g.db = sqlite3.connect(app.config['DATABASE'])
+
 @app.route('/')
 @login_required()
 def home():
@@ -43,8 +49,12 @@ def home():
 def login():
   form = LoginForm(request.form)
   if request.method == 'POST' and form.validate():
-    session['username'] = form.username.data
-    return redirect(url_for('home'))
+    cursor = g.db.execute('select username and password from users where username = ? and password = ?',\
+      [form.username.data, form.password.data])
+    row = cursor.fetchone()
+    if row is not None:
+      session['username'] = form.username.data
+      return redirect(url_for('home'))
   return render_template('login.html', form=form)
 
 @app.route('/create')

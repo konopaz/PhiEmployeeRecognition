@@ -1,5 +1,5 @@
 {% macro render_field(field) %}
-  <div class="form-group">
+  <div class="form-group{% if field.errors|length > 0 %} has-error{% endif %}">
     <div class="col-xs-3">{{field.label}}</div>
     <div class="col-xs-6">
       {{field(class_='form-control')|safe}}
