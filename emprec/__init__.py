@@ -48,17 +48,17 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
   form = LoginForm(request.form)
-  admin = False
   if request.method == 'POST' and form.validate():
     cursor = g.db.execute('select username and password from users where username = ? and password = ?',\
       [form.username.data, form.password.data])
     row = cursor.fetchone()
+    session['admin'] = False
     if row is not None:
       session['username'] = form.username.data
-      if form.username.data == 'admin' and form.username.data == 'admin':
-          admin = True
+      if form.username.data == 'admin' and form.password.data == 'admin':
+          session['admin'] = True
       return redirect(url_for('home'))
-  return render_template('login.html', form=form, admin=admin)
+  return render_template('login.html', form=form)
 
 @app.route('/createAccount', methods=['GET', 'POST'])
 def createAccount():
@@ -83,17 +83,10 @@ def create():
     form.awardCreatorEmail.data = session['username']
     form.awardDateTime.data = datetime.utcnow()
     if request.method == 'POST' and form.validate():
-        # certData = form.awardType.data, form.awardRecipientName.data, form.awardRecipientEmail.data, form.awardCreatorEmail.data, form.awardDateTime.data
-        # app.logger.info("Certificate Data = ", certData)
         # save award in the database
-        app.logger.info(form.awardType.data)
-        app.logger.info(form.awardRecipientName.data)
-        app.logger.info(form.awardRecipientEmail.data)
-        app.logger.info(form.awardCreatorEmail.data)
-        app.logger.info(form.awardDateTime.data)
-        # cursor = g.db.execute('insert into awards(type, recipientName, recipientEmail, creatorEmail, date) values(?, ?, ?, ?, ?)',\
-        # [form.awardType.data, form.awardRecipientName.data, form.awardRecipientEmail.data, form.awardCreatorEmail.data, form.awardDateTime.data])
-        # g.db.commit()
+        cursor = g.db.execute('insert into awards(type, recipientName, recipientEmail, creatorEmail, date) values(?, ?, ?, ?, ?)',\
+        [form.awardType.data, form.awardRecipientName.data, form.awardRecipientEmail.data, form.awardCreatorEmail.data, form.awardDateTime.data])
+        g.db.commit()
         message = "Thanks! Your award has been submitted."
         return redirect(url_for('create'))
     return render_template('create.html', form=form)
