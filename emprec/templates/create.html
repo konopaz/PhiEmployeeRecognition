@@ -5,10 +5,11 @@
 
   <div class="header">
     <h3 class="text-muted">Create an Award</h3>
+    <h4> {{ message }}</h4>
   </div>
 
   <div class="row">
-    <form class="form-horizontal col-xs-6" method="post" action="{{ url_for('confirmcert') }}">
+    <form class="form-horizontal col-xs-6" method="post" action="{{ url_for('create') }}">
       {% from '_formhelpers.html' import render_field %}
       {{ render_field(form.awardType) }}
       {{ render_field(form.awardRecipientName) }}
@@ -17,21 +18,13 @@
       {{ render_field(form.awardDateTime) }}
       <div class="form-group">
         <div class="col-xs-2">&nbsp;<!-- empty for positioning --></div>
-        <div class="col-xs-6"><button type="submit" href="{{ url_for('create') }}" class="btn btn-primary">Create</button></div>
+        <div class="col-xs-6"><button type="submit" class="btn btn-primary">Create</button></div>
       </div>
     </form>
   </div>
 
   <script type="text/javascript" src="../static/jquery-1.11.3.js"></script>
   <script type="text/javascript" src="../static/jquery.legit.js"></script>
-  <script type="text/javascript">
-    $(document).ready(function() {
-      $('form').legit({
-        invalidClass: 'has-error',
-        invalidSelector: '.<<id>>-holder'
-      });
-    });
-</script>
 </div>
 
 {% endblock %}
