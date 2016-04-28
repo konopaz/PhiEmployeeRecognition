@@ -22,6 +22,13 @@ formatter = logging.Formatter(app.config['LOGGING_FORMAT'])
 handler.setFormatter(formatter)
 app.logger.addHandler(handler)
 
+
+def dict_factory(cursor, row):
+    d = {}
+    for idx, col in enumerate(cursor.description):
+        d[col[0]] = row[idx]
+    return d
+
 def login_required():
   def wrapper(f):
     app.logger.debug('wrapping %s' % f)
@@ -38,6 +45,7 @@ def login_required():
 @app.before_request
 def before_request():
     g.db = sqlite3.connect(app.config['DATABASE'])
+    g.db.row_factory = dict_factory
 
 @app.route('/')
 @login_required()
@@ -94,7 +102,16 @@ def create():
 @app.route('/view')
 @login_required()
 def view():
-  return render_template('view.html')
+    awardsReceivedQuery = g.db.execute('select * from awards where recipientEmail = ?',\
+      [session['username']])
+    awardsReceived = awardsReceivedQuery.fetchall()
+    awardsGivenQuery = g.db.execute('select * from awards where creatorEmail = ?',\
+      [session['username']])
+    awardsGiven = awardsGivenQuery.fetchall()
+    # for award in row:
+    #     app.logger.debug(award)
+
+    return render_template('view.html', received=awardsReceived, given=awardsGiven)
 
 # @app.route('/confirmcert', methods=['GET', 'POST'])
 # @login_required()
