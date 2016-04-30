@@ -2,7 +2,7 @@ import functools
 import logging
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, \
-  abort, render_template, flash
+  abort, render_template, flash, jsonify
 from forms import LoginForm, CreateCertificateForm, CreateAccountForm
 from datetime import datetime
 
@@ -21,7 +21,6 @@ handler.setLevel(app.config['LOGGING_LEVEL'])
 formatter = logging.Formatter(app.config['LOGGING_FORMAT'])
 handler.setFormatter(formatter)
 app.logger.addHandler(handler)
-
 
 def dict_factory(cursor, row):
     d = {}
@@ -95,7 +94,7 @@ def create():
         cursor = g.db.execute('insert into awards(type, recipientName, recipientEmail, creatorEmail, date) values(?, ?, ?, ?, ?)',\
         [form.awardType.data, form.awardRecipientName.data, form.awardRecipientEmail.data, form.awardCreatorEmail.data, form.awardDateTime.data])
         g.db.commit()
-        message = "Thanks! Your award has been submitted."
+        flash('Thanks! Your award has been submitted.')
         return redirect(url_for('create'))
     return render_template('create.html', form=form)
 
@@ -108,10 +107,27 @@ def view():
     awardsGivenQuery = g.db.execute('select * from awards where creatorEmail = ?',\
       [session['username']])
     awardsGiven = awardsGivenQuery.fetchall()
-    # for award in row:
-    #     app.logger.debug(award)
 
     return render_template('view.html', received=awardsReceived, given=awardsGiven)
+
+@app.route('/adminQuery')
+@login_required()
+def adminQuery():
+    return render_template('adminQuery.html')
+
+@app.route('/handleQuery')
+def handleQuery():
+    type = request.args.get('type')
+    recipientName = request.args.get('recipientName')
+    recipientEmail = request.args.get('recipientEmail')
+    creator = request.args.get('creator')
+    date = request.args.get('date')
+    # change this query to reflect what the admin entered
+    query = g.db.execute('select * from awards')
+    results = query.fetchall()
+
+    # pass query back to js to create chart
+    return jsonify(result=results)
 
 # @app.route('/confirmcert', methods=['GET', 'POST'])
 # @login_required()

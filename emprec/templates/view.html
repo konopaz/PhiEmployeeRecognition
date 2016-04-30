@@ -4,30 +4,34 @@
 
 <div class="container">
 
-  <div class="header">
+  <!-- <div class="header">
     <h3 class="text-muted">Awards</h3>
-  </div>
+  </div> -->
 
   <div class="row">
-    <table class="table table-bordered" style="width:50%;">
-      <tr><td colspan="2" align="center">Awards Received</td></tr>
+    <h3 class="text-muted">Awards Received</h3>
+    <table class="table table-bordered" style="width:70%;">
+      <tr><th>Type</th><th>Awarded By</th><th>Date</th>
       {% for award in received %}
-      <tr><td>Type:</td><td> {{ award.type }}</td></tr>
-      <tr><td>Name:</td><td> {{ award.recipientName }}</td></tr>
-      <tr><td>Email:</td><td> {{ award.recipientEmail }}</td></tr>
-      <tr><td>Awarded By:</td><td> {{ award.creatorEmail }}</td></tr>
-      <tr><td>Awarded By:</td><td> {{ award.date }}</td></tr>
+      <tr>
+        <td> {{ award.type }}</td>
+        <td> {{ award.creatorEmail }}</td>
+        <td> {{ award.date }}</td>
+      </tr>
       {% endfor %}
     </table>
   </div>
   <div class="row">
-    <table class="table table-bordered" style="width:50%;">
-      <tr><td colspan="2" align="center">Awards Given</td></tr>
-      <!-- {% for award in given %}
-      <tr><td>Type:</td><td> {{ given.type }}</td></tr>
-      <tr><td>Awarded To:</td><td> {{ given.recipientName }} ( {{ given.recipientEmail }} )</td></tr>
-      <tr><td>Date:</td><td> {{ given.date }}</td></tr>
-      {% endfor %} -->
+    <h3 class="text-muted">Awards Given</h3>
+    <table class="table table-bordered" style="width:70%;">
+      <tr><th>Type</th><th>Awarded To</th><th>Date</th>
+      {% for award in given %}
+      <tr>
+        <td> {{ award.type }}</td>
+        <td> {{ award.recipientName }} ({{ award.recipientEmail }}) </td>
+        <td> {{ award.date }}</td>
+      </tr>
+      {% endfor %}
     </table>
   </div>
 
