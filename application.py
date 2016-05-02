@@ -1,4 +1,3 @@
-from emprec import app
-
+from emprec import app as application
 if __name__ == '__main__':
-  app.run()
+  application.run()
