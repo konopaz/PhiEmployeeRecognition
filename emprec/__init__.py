@@ -2,9 +2,18 @@ import functools
 import logging
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, \
-  abort, render_template, flash, jsonify
+  abort, render_template, flash, jsonify, send_file
 from forms import LoginForm, CreateCertificateForm, CreateAccountForm
 from datetime import datetime
+
+import PIL
+from PIL import ImageFont
+from PIL import Image
+from PIL import ImageDraw
+
+from tempfile import NamedTemporaryFile
+from shutil import copyfileobj
+import os
 
 DEBUG = True
 DATABASE = './emprec.db'
@@ -45,6 +54,25 @@ def login_required():
 def before_request():
     g.db = sqlite3.connect(app.config['DATABASE'])
     g.db.row_factory = dict_factory
+
+@app.route('/testpdf')
+def testpdf():
+  #font = ImageFont.truetype("./emprec/fonts/DroidSansMono.ttf", 50)
+  font = ImageFont.truetype("DroidSansMono.ttf", 50)
+  img = Image.open("./blank-certificate.jpg")
+  draw = ImageDraw.Draw(img)
+  draw.text((500, 500), "Zac Konopa", (0, 0, 0), font=font)
+  draw =ImageDraw.Draw(img)
+  img.save("/tmp/testpdf.pdf", "PDF", Quality = 100)
+
+  tmp = NamedTemporaryFile(mode="w+b", suffix="pdf")
+  pdf = open("/tmp/testpdf.pdf", "rb")
+  copyfileobj(pdf, tmp)
+  pdf.close()
+  os.remove("/tmp/testpdf.pdf")
+  tmp.seek(0, 0)
+
+  return send_file(tmp, as_attachment=True, attachment_filename="testpdf.pdf")
 
 @app.route('/')
 @login_required()
