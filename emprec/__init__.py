@@ -125,9 +125,15 @@ def handleQuery():
     # change this query to reflect what the admin entered
     query = g.db.execute('select * from awards')
     results = query.fetchall()
+    usersQuery = g.db.execute('select username from users')
+    usersResults = usersQuery.fetchall()
+    final = {
+        'users': usersResults,
+        'query': results
+    };
 
     # pass query back to js to create chart
-    return jsonify(result=results)
+    return jsonify(final=final)
 
 # @app.route('/confirmcert', methods=['GET', 'POST'])
 # @login_required()
