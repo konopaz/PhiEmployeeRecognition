@@ -143,13 +143,36 @@ def view():
 def adminQuery():
     return render_template('adminQuery.html')
 
+@app.route('/userOptions')
+@login_required()
+def userOptions():
+    form = CreateAccountForm(request.form)
+    allUsersQuery = g.db.execute('select * from users')
+    allUsers = allUsersQuery.fetchall()
+    return render_template('userOptions.html', allUsers=allUsers, form=form)
+
+@app.route('/deleteUsers')
+@login_required()
+def deleteUsers():
+    app.logger.debug("In deleteUsers function")
+    allUsersQuery = g.db.execute('select * from users')
+    allUsers = allUsersQuery.fetchall()
+
+    # get users that are checked
+    # delete each user
+
+    return render_template('userOptions.html', allUsers=allUsers, message="Delete was successful!")
+
 @app.route('/handleQuery')
 def handleQuery():
-    type = request.args.get('type')
+    awardType = request.args.get('type')
     recipientName = request.args.get('recipientName')
     recipientEmail = request.args.get('recipientEmail')
     creator = request.args.get('creator')
     date = request.args.get('date')
+    sortField = request.args.get('sortField')
+    chartType = request.args.get('chartType')
+
     # change this query to reflect what the admin entered
     query = g.db.execute('select * from awards')
     results = query.fetchall()
@@ -157,7 +180,8 @@ def handleQuery():
     usersResults = usersQuery.fetchall()
     final = {
         'users': usersResults,
-        'query': results
+        'query': results,
+        'chartType': chartType
     };
 
     # pass query back to js to create chart

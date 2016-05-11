@@ -1,6 +1,18 @@
 {% macro render_field(field) %}
   <div class="form-group{% if field.errors|length > 0 %} has-error{% endif %}">
     <div class="col-xs-3">{{field.label}}</div>
+    {% if field.label.text == 'Your Email' or field.label.text == 'Date/Time' %}
+    <div class="col-xs-6">
+      {{field(class_='form-control', disabled=true)|safe}}
+      {% if field.errors %}
+        {% for error in field.errors %}
+          <small class="help-block">{{ error }}</small>
+        {% endfor %}
+      {% endif %}
+    </div>
+    {% else %}
+
+
     <div class="col-xs-6">
       {{field(class_='form-control')|safe}}
       {% if field.errors %}
@@ -9,5 +21,8 @@
         {% endfor %}
       {% endif %}
     </div>
+
+    {% endif %}
+
   </div>
 {% endmacro %}

@@ -16,10 +16,11 @@
         recipientEmail: $('input[name="recipientEmail"]').val(),
         creator: $('input[name="creator"]').val(),
         date: $('input[name="date"]').val(),
-        chartType: $('input[name="chartType"]').val()
+        chartType: $('input[name="option"]:checked').val(),
+        sortField: $('input[name="sortField"]:checked').val()
       }, function(data) {
-        // $("#result").text(results.result);
         console.log(data);
+        var chartType = data['final']['chartType'];
         var results = data['final']['query'];
         var users = data.final.users;
         console.log(results);
@@ -72,7 +73,10 @@
                          'height':450};
 
           // Show results in a chart of the user's choice
-          var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+          if(chartType == 'bar')
+            var chart = new google.visualization.BarChart(document.getElementById('chart_div'));
+          else
+            var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
           chart.draw(chartData, options);
 
           // Show results in a table
@@ -119,26 +123,41 @@
       <input type="text" class="form-control" id="date" placeholder="Date" name="date">
     </div>
   </div>
-  <div class="form-group">
-    <label for="chartType" class="col-sm-4 control-label">Chart Type</label>
-    <div class="col-sm-6">
-      <input type="text" class="form-control" id="chartType" placeholder="Chart Type" name="chartType">
+  <!-- <div class="form-group">
+    <label for="sort" class="col-sm-4 control-label">Sort By</label>
+    <div class="btn-group col-sm-6">
+      <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Select... <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu">
+        <li class="dropdown-item" href="#" value="recipientName">Recipient Name</li>
+        <li class="dropdown-item" href="#" value="awardType">Award Type</li>
+        <li class="dropdown-item" href="#" value="recipientEmail">Recipient Email</li>
+        <li class="dropdown-item" href="#" value="date">Date</li>
+      </ul>
+      </div>
+    </div> -->
+    <div class="form-group">
+      <label for="sort" class="col-sm-4 control-label">Sort By</label>
+      <div class="btn-group col-sm-6">
+        <div class="radio"><label><input type="radio" name="sortField" value="recipientName">Recipient Name</label></div>
+        <div class="radio"><label><input type="radio" name="sortField" value="recipientEmail">Recipient Email</label></div>
+        <div class="radio"><label><input type="radio" name="sortField" value="awardType">Award Type</label></div>
+      </div>
     </div>
-  </div>
-  <div class="form-group">
-    <label for="sort" class="col-sm-4 control-label">Sort By:</label>
-    <div class="col-sm-6">
-      <input type="text" class="form-control" id="sort" placeholder="Sort" name="sort">
+    <div class="form-group">
+      <label for="sort" class="col-sm-4 control-label">Chart Type</label>
+      <div class="btn-group col-sm-6">
+        <div class="radio-inline"><label><input type="radio" name="option" value="pie">Pie</label></div>
+        <div class="radio-inline"><label><input type="radio" name="option" value="bar">Bar</label></div>
+      </div>
     </div>
-  </div>
   <div class="form-group">
     <div class="col-sm-offset-2 col-sm-4"><a id="chartHere">
       <button type="submit" class="btn btn-default">Get Results</button></a>
     </div>
   </div>
 </form>
-<span id="result"></span>
-
 </div>
 
 <div class="container col-xs-6">
@@ -148,7 +167,6 @@
   <h3>All Awards</h3>
   <div id="table_div"></div>
 </div>
-
 
 
 <div class="container">
