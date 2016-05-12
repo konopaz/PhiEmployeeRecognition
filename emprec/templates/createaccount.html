@@ -11,6 +11,7 @@
     <form class="form-horizontal col-xs-6" method="post" action="{{ url_for('createAccount') }}">
       {% from '_formhelpers.html' import render_field %}
       {{ render_field(form.newname) }}
+      {{ render_field(form.usertype) }}
       {{ render_field(form.newusername) }}
       {{ render_field(form.newpassword) }}
       {{ render_field(form.confirm) }}

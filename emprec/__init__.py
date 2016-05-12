@@ -84,13 +84,14 @@ def home():
 def login():
   form = LoginForm(request.form)
   if request.method == 'POST' and form.validate():
-    cursor = g.db.execute('select username and password from users where username = ? and password = ?',\
+    cursor = g.db.execute('select * from users where username = ? and password = ?',\
       [form.username.data, form.password.data])
     row = cursor.fetchone()
     session['admin'] = False
+    app.logger.debug(row)
     if row is not None:
       session['username'] = form.username.data
-      if form.username.data == 'admin' and form.password.data == 'admin':
+      if row['usertype'] == 'admin':
           session['admin'] = True
       return redirect(url_for('home'))
   return render_template('login.html', form=form)
@@ -101,8 +102,15 @@ def createAccount():
     form = CreateAccountForm(request.form)
     if request.method == 'POST' and form.validate():
         # save user in the database
-        cursor = g.db.execute('insert into users(name, username, password) values(?, ?, ?)',\
-        [form.newname.data, form.newusername.data, form.newpassword.data])
+        if form.usertype.data == '':
+            app.logger.debug("Form field is empty")
+            usertype = 'regular'
+        else:
+            app.logger.debug("Form field has data")
+            usertype = form.usertype.data
+        app.logger.debug(form.usertype.data)
+        cursor = g.db.execute('insert into users(name, username, password, usertype) values(?, ?, ?, ?)',\
+        [form.newname.data, form.newusername.data, form.newpassword.data, usertype])
         # log the user in
         g.db.commit()
         app.logger.debug('New user created')
@@ -154,6 +162,7 @@ def userOptions():
 @app.route('/deleteUsers')
 @login_required()
 def deleteUsers():
+    form = CreateAccountForm(request.form)
     app.logger.debug("In deleteUsers function")
     allUsersQuery = g.db.execute('select * from users')
     allUsers = allUsersQuery.fetchall()
@@ -161,7 +170,7 @@ def deleteUsers():
     # get users that are checked
     # delete each user
 
-    return render_template('userOptions.html', allUsers=allUsers, message="Delete was successful!")
+    return render_template('userOptions.html', allUsers=allUsers, message="Delete was successful!", form=form)
 
 @app.route('/handleQuery')
 def handleQuery():

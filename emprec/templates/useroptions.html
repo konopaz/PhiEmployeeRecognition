@@ -15,10 +15,10 @@
     <tr><th></th><th>Username</th><th>Name</th><th>User Type</th><tr>
     {% for user in allUsers %}
     <tr>
-      <td><input type="checkbox"></input></td>
+      <td><input type="checkbox" name="user" value="{{ user.username }}"></input></td>
       <td> {{ user.username }}</td>
       <td> {{ user.name }}</td>
-      <td> {{ user.type }}</td>
+      <td> {{ user.usertype }}</td>
     </tr>
     {% endfor %}
   </table>
@@ -38,6 +38,7 @@
         <form class="form-horizontal" method="post" action="{{ url_for('createAccount') }}">
           {% from '_formhelpers.html' import render_field %}
           {{ render_field(form.newname) }}
+          {{ render_field(form.usertype) }}
           {{ render_field(form.newusername) }}
           {{ render_field(form.newpassword) }}
           {{ render_field(form.confirm) }}
