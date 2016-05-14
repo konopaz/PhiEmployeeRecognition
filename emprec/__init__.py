@@ -5,6 +5,8 @@ from flask import Flask, request, session, g, redirect, url_for, \
   abort, render_template, flash, jsonify, send_file
 from forms import LoginForm, CreateCertificateForm, CreateAccountForm
 from datetime import datetime
+from emprec.pdfcert import pdfcert
+from emprec.mailcert import mailcert
 
 import PIL
 from PIL import ImageFont
@@ -55,29 +57,23 @@ def before_request():
     g.db = sqlite3.connect(app.config['DATABASE'])
     g.db.row_factory = dict_factory
 
-@app.route('/testpdf')
-def testpdf():
-  #font = ImageFont.truetype("./emprec/fonts/DroidSansMono.ttf", 50)
-  font = ImageFont.truetype("DroidSansMono.ttf", 50)
-  img = Image.open("./blank-certificate.jpg")
-  draw = ImageDraw.Draw(img)
-  draw.text((500, 500), "Zac Konopa", (0, 0, 0), font=font)
-  draw =ImageDraw.Draw(img)
-  img.save("/tmp/testpdf.pdf", "PDF", Quality = 100)
+@app.route('/testviewpdf')
+def testviewpdf():
+  cert = pdfcert("./blank-certificate.jpg")
+  cert.write(text="Anita is sexy!", position=(500, 500), color=(10, 150, 77))
+  return send_file(cert.save(), as_attachment=False, attachment_filename="testpdf.pdf", mimetype="application/pdf")
 
-  tmp = NamedTemporaryFile(mode="w+b", suffix="pdf")
-  pdf = open("/tmp/testpdf.pdf", "rb")
-  copyfileobj(pdf, tmp)
-  pdf.close()
-  os.remove("/tmp/testpdf.pdf")
-  tmp.seek(0, 0)
-
-  return send_file(tmp, as_attachment=True, attachment_filename="testpdf.pdf")
+@app.route('/testemailpdf')
+def testemailpdf():
+  cert = pdfcert("./blank-certificate.jpg")
+  cert.write(text="The rain in spain stays mainly on the plains.", position=(250, 500), color=(10, 150, 77))
+  mailcert('zac.konopa@gmail.com', 
+    'Interesting subject line goes here.', 'Some message body goes here.', cert.save())
+  return "sent email?"
 
 @app.route('/')
 @login_required()
 def home():
-  app.logger.debug('hello!')
   return render_template('home.html')
 
 @app.route('/login', methods=['GET', 'POST'])
