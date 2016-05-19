@@ -1,0 +1,27 @@
+{% extends "home.html" %}
+{% block content %}
+
+<div class="container">
+
+  <div class="header">
+    <h3 class="text-muted">Edit User</h3>
+  </div>
+
+  <div class="row">
+    <form class="form-horizontal col-xs-6" method="post" action="{{ url_for('editUser', username='None') }}">
+      {% from '_formhelpers.html' import render_field %}
+      {{ render_field(form.newname) }}
+      {{ render_field(form.usertype) }}
+      {{ render_field(form.newusername) }}
+      <div class="form-group">
+        <div class="col-xs-2">&nbsp;</div>
+        <div class="col-xs-6"><button type="submit" class="btn btn-primary">Update</button></div>
+      </div>
+    </form>
+  </div>
+
+  <!-- <script type="text/javascript" src="../static/js/jquery-1.11.3.js"></script> -->
+  <!-- <script type="text/javascript" src="../static/js/jquery.legit.js"></script> -->
+</div>
+
+{% endblock %}

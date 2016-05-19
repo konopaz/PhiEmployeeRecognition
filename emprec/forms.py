@@ -1,4 +1,4 @@
-from wtforms import Form, TextField, PasswordField, DateTimeField, SelectField, validators
+from wtforms import Form, TextField, PasswordField, DateTimeField, SelectField, HiddenField, validators
 
 class LoginForm(Form):
   username = TextField('Username', [validators.Required(message="Please enter your username.")])

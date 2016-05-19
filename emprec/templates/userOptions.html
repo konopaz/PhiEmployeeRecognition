@@ -1,8 +1,8 @@
 {% extends "home.html" %}
 {% block content %}
-<script type="text/javascript" src="../static/jquery-1.11.3.js"></script>
-<script type="text/javascript" src="../static/jquery.legit.js"></script>
-<script type="text/javascript" src="../static/loader.js"></script>
+<script type="text/javascript" src="../../static/js/jquery-1.11.3.js"></script>
+<script type="text/javascript" src="../../static/js/jquery.legit.js"></script>
+<script type="text/javascript" src="../../static/js/loader.js"></script>
 <script type=text/javascript>
   $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
@@ -12,17 +12,23 @@
   <h3 class="text-muted">Add, Edit, Remove Users</h3>
   <h5>{{ message }}</h5>
   <table class="table table-bordered" style="width:70%;">
-    <tr><th></th><th>Username</th><th>Name</th><th>User Type</th><tr>
+    <tr><th></th><th></th><th></th><th>Username</th><th>Name</th><th>User Type</th><tr>
     {% for user in allUsers %}
     <tr>
-      <td><input type="checkbox" name="user" value="{{ user.username }}"></input></td>
+      <td>{{loop.index}}</td>
+      <td><a data-toggle="modal" id="editModal" href="editUser/{{user.username}}"><span class="glyphicon glyphicon-pencil" value="{{ user.username }}"></span></a></td>
+      <!-- <td><a data-toggle="modal" id="editModal" data-username="{{ user.username }}" data-name="{{user.name}}" data-usertype="{{user.usertype}}" href="#editUserModal"><span class="glyphicon glyphicon-pencil" value="{{ user.username }}"></span></a></td> -->
+      <td onclick="deleteItem('{{ user.username }}')"><a href="deleteUser/{{user.username}}" value="test"><span class="glyphicon glyphicon-remove" id="deleteUser"></span></a></td>
       <td> {{ user.username }}</td>
       <td> {{ user.name }}</td>
       <td> {{ user.usertype }}</td>
+
     </tr>
     {% endfor %}
   </table>
-  <button type="button" data-toggle="modal" data-target="#myModal"><a href="#">Add a New User</a></button> <button type="button"><a href="{{ url_for('deleteUsers') }}">Delete Selected User(s)</a></button>
+
+  <button type="button"><a href="addUser">Add a New User</a></button>
+
 </div>
 <div class="col-xs-2"></div>
 <div class="modal fade" id="myModal">
@@ -52,11 +58,66 @@
   </div>
 </div>
 
+<!-- <div class="modal fade" id="editModal">
+  <div class="modal-dialog">
+
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Edit User</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal" method="post" action="{{ url_for('createAccount') }}">
+
+          <div class="form-group" style="text-align:center;">
+            <button type="submit" class="btn btn-primary">Update</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div> -->
+
+
+
+<div class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Edit User</h4>
+      </div>
+      <div class="modal-body">
+      <form class="form-horizontal" method="post" action="{{ url_for('createAccount') }}">
+      {% from '_formhelpers.html' import render_field %}
+      {{ render_field(form.newname) }}
+      {{ render_field(form.usertype) }}
+      {{ render_field(form.newusername) }}
+      <div class="form-group" style="text-align:center;">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </form>
+  </div>
+    </div>
+  </div>
+</div>
+
 <script>
-// $('#myModal').modal('hide');
-// function addUser() {
-//   console.log("adding a user");
-//   $('#myModal').modal('show');
-// }
+$(document).on("click", "#editModal", function () {
+  console.log("Something");
+  $("#editUserModal").modal();
+     var username = $(this).data('username');
+     var name = $(this).data('name');
+     var usertype = $(this).data('usertype');
+     console.log(username);
+     $(".modal-body #username").val( username );
+     $(".modal-body #name").val( name );
+     $(".modal-body #usertype").val( usertype );
+});
+
+
 </script>
+
 {% endblock %}

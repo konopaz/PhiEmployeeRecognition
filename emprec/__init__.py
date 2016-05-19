@@ -2,7 +2,7 @@ import functools
 import logging
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, \
-  abort, render_template, flash, jsonify, send_file
+  abort, render_template, flash, get_flashed_messages, jsonify, send_file
 from forms import LoginForm, CreateCertificateForm, CreateAccountForm
 from datetime import datetime
 from emprec.pdfcert import pdfcert
@@ -67,7 +67,7 @@ def testviewpdf():
 def testemailpdf():
   cert = pdfcert("./blank-certificate.jpg")
   cert.write(text="The rain in spain stays mainly on the plains.", position=(250, 500), color=(10, 150, 77))
-  mailcert('zac.konopa@gmail.com', 
+  mailcert('zac.konopa@gmail.com',
     'Interesting subject line goes here.', 'Some message body goes here.', cert.save())
   return "sent email?"
 
@@ -92,18 +92,48 @@ def login():
       return redirect(url_for('home'))
   return render_template('login.html', form=form)
 
+@app.route('/addUser', methods=['GET', 'POST'])
+@login_required()
+def addUser():
+    form = CreateAccountForm(request.form)
+    if request.method == 'POST' and form.validate():
+        # save user in the database
+        if session.get('username') is not None:
+            app.logger.debug("User is logged in so it must be an admin editing users")
+            usertype = form.usertype.data
+            app.logger.debug(form.usertype.data)
+            cursor = g.db.execute('insert into users(name, username, password, usertype) values(?, ?, ?, ?)',\
+            [form.newname.data, form.newusername.data, form.newpassword.data, usertype])
+            # log the user in
+            g.db.commit()
+            app.logger.debug('New user created')
+            allUsersQuery = g.db.execute('select * from users')
+            allUsers = allUsersQuery.fetchall()
+            # session['data'] = {'allUsers': allUsers, 'form': form, 'message': 'User has been addedd'}
+            session['message'] = { 'message': 'User has been added'}
+            return redirect(url_for('userOptions'))
+            # return render_template('useroptions.html', form=form, message="User has been added", allUsers=allUsers)
+        else:
+            app.logger.debug("User is not logged in- a new user is being created")
+            app.logger.debug("Form field has data")
+            usertype = form.usertype.data
+            app.logger.debug(form.usertype.data)
+            cursor = g.db.execute('insert into users(name, username, password, usertype) values(?, ?, ?, ?)',\
+            [form.newname.data, form.newusername.data, form.newpassword.data, usertype])
+            # log the user in
+            g.db.commit()
+            app.logger.debug('New user created')
+            session['username'] = form.newusername.data
+            return redirect(url_for('userOptions'))
+    title = "Add a New User"
+    return render_template('adduser.html', form=form, title=title)
+
 @app.route('/createAccount', methods=['GET', 'POST'])
 def createAccount():
     app.logger.debug('In create account!')
     form = CreateAccountForm(request.form)
     if request.method == 'POST' and form.validate():
-        # save user in the database
-        if form.usertype.data == '':
-            app.logger.debug("Form field is empty")
-            usertype = 'regular'
-        else:
-            app.logger.debug("Form field has data")
-            usertype = form.usertype.data
+        usertype = form.usertype.data
         app.logger.debug(form.usertype.data)
         cursor = g.db.execute('insert into users(name, username, password, usertype) values(?, ?, ?, ?)',\
         [form.newname.data, form.newusername.data, form.newpassword.data, usertype])
@@ -112,7 +142,8 @@ def createAccount():
         app.logger.debug('New user created')
         session['username'] = form.newusername.data
         return redirect(url_for('home'))
-    return render_template('createaccount.html', form=form)
+    title = "Create An Account"
+    return render_template('createaccount.html', url="base.html", form=form, title=title)
 
 @app.route('/create', methods=['GET', 'POST'])
 @login_required()
@@ -139,7 +170,6 @@ def view():
     awardsGivenQuery = g.db.execute('select * from awards where creatorEmail = ?',\
       [session['username']])
     awardsGiven = awardsGivenQuery.fetchall()
-
     return render_template('view.html', received=awardsReceived, given=awardsGiven)
 
 @app.route('/adminQuery')
@@ -153,22 +183,57 @@ def userOptions():
     form = CreateAccountForm(request.form)
     allUsersQuery = g.db.execute('select * from users')
     allUsers = allUsersQuery.fetchall()
-    return render_template('userOptions.html', allUsers=allUsers, form=form)
+    sessionMessage = session.pop('message', [])
+    app.logger.debug(sessionMessage)
+    if sessionMessage:
+        message = sessionMessage['message']
+    else:
+        message = ''
+    return render_template('userOptions.html', allUsers=allUsers, form=form , message=message)
 
-@app.route('/deleteUsers')
+@app.route('/editUser/<username>/', methods=['GET', 'POST'])
 @login_required()
-def deleteUsers():
+def editUser(username):
     form = CreateAccountForm(request.form)
-    app.logger.debug("In deleteUsers function")
-    allUsersQuery = g.db.execute('select * from users')
-    allUsers = allUsersQuery.fetchall()
+    app.logger.debug("Username", username)
+    if request.method == 'POST' and username == 'None':
+        updateQuery = g.db.execute('update users set name=?, usertype=?, username=? where username=?', \
+        [form.newname.data, form.usertype.data, form.newusername.data, session['oldusername']])
+        g.db.commit()
+        allUsersQuery = g.db.execute('select * from users')
+        allUsers = allUsersQuery.fetchall()
+        session['oldusername'] = ''
+        session['message'] = {'message': 'User has been edited'}
+        return redirect(url_for('userOptions'))
+    else:
+        allUsersQuery = g.db.execute('select * from users')
+        allUsers = allUsersQuery.fetchall()
+        editUserQuery = g.db.execute('select * from users where username=?', \
+        [username])
+        editUser = editUserQuery.fetchall()
+        form.newname.data = editUser[0]['name']
+        form.newusername.data = editUser[0]['username']
+        form.usertype.data = editUser[0]['usertype']
+        app.logger.debug(editUser[0])
+        session['oldusername'] = editUser[0]['username']
+    return render_template('edituser.html', editUser=editUser, form=form)
 
-    # get users that are checked
-    # delete each user
-
-    return render_template('userOptions.html', allUsers=allUsers, message="Delete was successful!", form=form)
+@app.route('/deleteUser/<username>')
+@login_required()
+def deleteUser(username):
+    form = CreateAccountForm(request.form)
+    app.logger.debug(username)
+    if username == session['username']:
+        session['message'] = {'message': 'Logged in user cannot be deleted'}
+    else:
+        query = g.db.execute('delete from users where username = ?',\
+        [username])
+        g.db.commit()
+        session['message'] = {'message': 'User has been deleted'}
+    return redirect(url_for('userOptions'))
 
 @app.route('/handleQuery')
+@login_required()
 def handleQuery():
     awardType = request.args.get('type')
     recipientName = request.args.get('recipientName')

@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "home.html" %}
 {% block content %}
 
 <div class="container">
@@ -8,7 +8,7 @@
   </div>
 
   <div class="row">
-    <form class="form-horizontal col-xs-6" method="post" action="{{ url_for('createAccount') }}">
+    <form class="form-horizontal col-xs-6" method="post" action="{{ url_for('addUser') }}">
       {% from '_formhelpers.html' import render_field %}
       {{ render_field(form.newname) }}
       {{ render_field(form.usertype) }}
@@ -17,7 +17,7 @@
       {{ render_field(form.confirm) }}
       <div class="form-group">
         <div class="col-xs-2">&nbsp;<!-- empty for positioning --></div>
-        <div class="col-xs-6"><button type="submit" class="btn btn-primary">Create Account</button></div>
+        <div class="col-xs-6"><button type="submit" class="btn btn-primary">Add New User</button></div>
       </div>
     </form>
   </div>
