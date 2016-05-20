@@ -60,17 +60,21 @@ def before_request():
 
 @app.route('/testviewpdf')
 def testviewpdf():
+  cursor = g.db.execute("select * from awards where id = 7")
+  award = cursor.fetchone()
   cert = pdfcert("./blank-certificate.jpg")
-  cert.write(text="Anita is sexy!", position=(500, 500), color=(10, 150, 77))
+  cert.writeAward(award)
   return send_file(cert.save(), as_attachment=False, attachment_filename="testpdf.pdf", mimetype="application/pdf")
 
 @app.route('/testemailpdf')
 def testemailpdf():
+  cursor = g.db.execute("select * from awards where id = 8")
+  award = cursor.fetchone()
   cert = pdfcert("./blank-certificate.jpg")
-  cert.write(text="The rain in spain stays mainly on the plains.", position=(250, 500), color=(10, 150, 77))
-  mailcert('zac.konopa@gmail.com',
+  cert.writeAward(award)
+  mailcert(award["recipientEmail"], 
     'Interesting subject line goes here.', 'Some message body goes here.', cert.save())
-  return "sent email?"
+  return "sent email to %s" % award["recipientEmail"]
 
 @app.route('/')
 @login_required()
