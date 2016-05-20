@@ -1,8 +1,9 @@
 import functools
 import logging
 import sqlite3
+import StringIO, csv
 from flask import Flask, request, session, g, redirect, url_for, \
-  abort, render_template, flash, get_flashed_messages, jsonify, send_file
+  abort, render_template, flash, get_flashed_messages, jsonify, send_file, make_response
 from forms import LoginForm, CreateCertificateForm, CreateAccountForm
 from datetime import datetime
 from emprec.pdfcert import pdfcert
@@ -255,7 +256,21 @@ def handleQuery():
     };
 
     # pass query back to js to create chart
+    session['query'] = results
     return jsonify(final=final)
+
+@app.route('/exportToCSV')
+@login_required()
+def exportToCSV():
+    app.logger.debug(session['query'])
+    si = StringIO.StringIO()
+    cw = csv.writer(si)
+    cw.writerow([{'Name', 'Recipient Name', 'Date', 'Award Type'}])
+    cw.writerow(session['query'])
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=query.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
 
 # @app.route('/confirmcert', methods=['GET', 'POST'])
 # @login_required()
