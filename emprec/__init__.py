@@ -2,6 +2,8 @@ import functools
 import logging
 import sqlite3
 import StringIO, csv
+import json
+from sets import Set
 from flask import Flask, request, session, g, redirect, url_for, \
   abort, render_template, flash, get_flashed_messages, jsonify, send_file, make_response
 from forms import LoginForm, CreateCertificateForm, CreateAccountForm
@@ -72,7 +74,7 @@ def testemailpdf():
   award = cursor.fetchone()
   cert = pdfcert("./blank-certificate.jpg")
   cert.writeAward(award)
-  mailcert(award["recipientEmail"], 
+  mailcert(award["recipientEmail"],
     'Interesting subject line goes here.', 'Some message body goes here.', cert.save())
   return "sent email to %s" % award["recipientEmail"]
 
@@ -244,47 +246,94 @@ def handleQuery():
     recipientName = request.args.get('recipientName')
     recipientEmail = request.args.get('recipientEmail')
     creator = request.args.get('creator')
-    date = request.args.get('date')
+    # date = request.args.get('date')
     sortField = request.args.get('sortField')
+    queryType = request.args.get('queryType')
     chartType = request.args.get('chartType')
+    app.logger.debug(queryType)
+    awardResults = ''
+    title = ''
 
     # change this query to reflect what the admin entered
-    query = g.db.execute('select * from awards')
-    results = query.fetchall()
-    usersQuery = g.db.execute('select username from users')
-    usersResults = usersQuery.fetchall()
+    # query = g.db.execute('select * from awards')
+    # results = query.fetchall()
+    # app.logger.debug(results)
+    if queryType:
+        app.logger.debug("QUERY TYPE IS SET")
+        if queryType == 'numRcvdPU':
+            # Number of awards received per person
+            queryNumAwardsRcvdPU = g.db.execute('select recipientName, recipientEmail, count(recipientEmail) as numAwards from awards group by recipientEmail')
+            awardResults = queryNumAwardsRcvdPU.fetchall()
+            app.logger.debug(awardResults)
+            title = "Number of Awards Received Per User"
+        elif queryType == 'numGivenPU':
+            # Number of awards given per person
+            queryNumAwardsGivenPU = g.db.execute('select creatorEmail, count(creatorEmail)as numAwards from awards group by creatorEmail')
+            awardResults = queryNumAwardsGivenPU.fetchall()
+            app.logger.debug(awardResults)
+            title = "Number of Awards Given Per User"
+        elif queryType == 'numEachType':
+            # Number of awards of each type
+            queryNumAwardsEachType = g.db.execute('select type as awardType, count(type) as numAwards from awards group by type')
+            awardResults = queryNumAwardsEachType.fetchall()
+            app.logger.debug(awardResults)
+            title = "Number of Each Type of Award"
+        else:
+            queryAllAwards = g.db.execute('select * from awards')
+            awardResults = queryAllAwards.fetchall()
+            app.logger.debug(awardResults)
+            title = "All Awards"
+    else:
+        app.logger.debug("QUERY TYPE IS NOT SET")
+        queryAllAwards = g.db.execute('select * from awards')
+        awardResults = queryAllAwards.fetchall()
+        app.logger.debug(awardResults)
+        title = "All Awards"
+
     final = {
-        'users': usersResults,
-        'query': results,
-        'chartType': chartType
+        # 'query': results,
+        'queryType': queryType,
+        'chartType': chartType,
+        'queryResults': awardResults,
+        'title': title
     };
 
     # pass query back to js to create chart
-    session['query'] = results
+    # session['query'] = usersResults
+    session['queryResults'] = awardResults
+    session['final'] = final
+    # app.logger.debug(results[0]['recipientEmail'])
     return jsonify(final=final)
 
-@app.route('/exportToCSV')
+@app.route('/exportToCSV', methods=['GET', 'POST'])
 @login_required()
 def exportToCSV():
-    app.logger.debug(session['query'])
     si = StringIO.StringIO()
     cw = csv.writer(si)
-    cw.writerow([{'Name', 'Recipient Name', 'Date', 'Award Type'}])
-    cw.writerow(session['query'])
+    cw.writerow([session['final']['title']])
+
+    if session['final']['queryType']:
+        if session['final']['queryType'] == 'numRcvdPU':
+            cw.writerow(['Email', 'Number of Awards'])
+            for row in session['queryResults']:
+                cw.writerow([row["recipientEmail"], row["numAwards"]])
+        elif session['final']['queryType'] == 'numGivenPU':
+            cw.writerow(['Email', 'Number of Awards'])
+            for row in session['queryResults']:
+                cw.writerow([row["creatorEmail"], row["numAwards"]])
+        elif session['final']['queryType'] == 'numEachType':
+            cw.writerow(['Type', 'Number of Awards'])
+            for row in session['queryResults']:
+                cw.writerow([row["awardType"], row["numAwards"]])
+    else:
+        cw.writerow(['Date', 'Recipient Name', 'Recipient Email', 'Creator Email', 'Type'])
+        for row in session['queryResults']:
+            cw.writerow([row["date"], row["recipientName"], row["recipientEmail"], row["creatorEmail"], row["type"]])
+
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = "attachment; filename=query.csv"
     output.headers["Content-type"] = "text/csv"
     return output
-
-# @app.route('/confirmcert', methods=['GET', 'POST'])
-# @login_required()
-# def confirmcert():
-#     form = CreateCertificateForm(request.form)
-#     if request.method == 'POST' and form.validate():
-#         certData = form.awardType.data, form.awardRecipientName.data, form.awardRecipientEmail.data, form.awardCreatorEmail.data, form.awardDateTime.data
-#         app.logger.info("Certificate Data = ", certData)
-#         return render_template('confirmcert.html', certData=certData)
-#     return redirect(url_for('create'))
 
 @app.route('/logout')
 def logout():

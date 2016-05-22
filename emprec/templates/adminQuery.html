@@ -10,7 +10,7 @@
 
 <div class="container col-xs-6">
   <h3 class="text-muted">Query</h3>
-  <p>Search by any of the following parameters. An empty search will return all awards.</p>
+  <p>Search by any of the following parameters or choose a default query type in the blue box below. An empty search will return all awards.</p>
 <form class="form-horizontal">
   <div class="form-group">
     <label for="type" class="col-sm-4 control-label">Award Type</label>
@@ -31,25 +31,27 @@
     </div>
   </div>
   <div class="form-group">
-    <label for="creator" class="col-sm-4 control-label">Creator</label>
+    <label for="creator" class="col-sm-4 control-label">Creator Email</label>
     <div class="col-sm-6">
       <input type="text" class="form-control" id="creator" placeholder="Creator" name="creator">
     </div>
   </div>
   <div class="form-group">
-    <label for="date" class="col-sm-4 control-label">Date</label>
-    <div class="col-sm-6">
-      <input type="text" class="form-control" id="date" placeholder="Date" name="date">
+    <label for="sort" class="col-sm-4 control-label">Sort By</label>
+    <div class="btn-group col-sm-6">
+      <div class="radio"><label><input type="radio" name="sortField" value="recipientName">Recipient Name</label></div>
+      <div class="radio"><label><input type="radio" name="sortField" value="recipientEmail">Recipient Email</label></div>
+      <div class="radio"><label><input type="radio" name="sortField" value="awardType">Award Type</label></div>
     </div>
   </div>
-    <div class="form-group">
-      <label for="sort" class="col-sm-4 control-label">Sort By</label>
-      <div class="btn-group col-sm-6">
-        <div class="radio"><label><input type="radio" name="sortField" value="recipientName">Recipient Name</label></div>
-        <div class="radio"><label><input type="radio" name="sortField" value="recipientEmail">Recipient Email</label></div>
-        <div class="radio"><label><input type="radio" name="sortField" value="awardType">Award Type</label></div>
-      </div>
+  <div class="form-group" >
+    <label for="sort" class="col-sm-4 control-label">Type of Query</label>
+    <div class="btn-group col-sm-6" style="background-color:lightcyan;">
+      <div class="radio"><label><input type="radio" name="queryType" value="numRcvdPU">Number of awards received per user</label></div>
+      <div class="radio"><label><input type="radio" name="queryType" value="numGivenPU">Number of awards given per user</label></div>
+      <div class="radio"><label><input type="radio" name="queryType" value="numEachType">Number of each type of award given</label></div>
     </div>
+  </div>
     <div class="form-group">
       <label for="sort" class="col-sm-4 control-label">Chart Type</label>
       <div class="btn-group col-sm-6">
@@ -58,6 +60,9 @@
       </div>
     </div>
   <div class="form-group">
+    <button type="submit" class="btn btn-default" id="exportToCSV">
+      <a href="exportToCSV">Export to CSV</a>
+    </button>
     <div class="col-sm-offset-2 col-sm-4"><a id="chartHere">
       <button type="submit" class="btn btn-default">Get Results</button></a>
     </div>
@@ -69,8 +74,7 @@
   <div id="chart_div"></div>
 </div>
 <div class="container col-xs-12">
-  <button type="submit" class="btn btn-default"><a href="exportToCSV">Export to CSV</a></button>
-  <h3>All Awards</h3>
+  <h3>Query Results</h3>
   <div id="table_div"></div>
 </div>
 
