@@ -62,8 +62,9 @@ def before_request():
 
 @app.route('/testviewpdf')
 def testviewpdf():
-  cursor = g.db.execute("select * from awards where id = 7")
+  cursor = g.db.execute("select * from awards where id = 8")
   award = cursor.fetchone()
+  award['date'] = datetime.utcnow().strftime("%B %-d, %Y")
   cert = pdfcert("./blank-certificate.jpg")
   cert.writeAward(award)
   return send_file(cert.save(), as_attachment=False, attachment_filename="testpdf.pdf", mimetype="application/pdf")
@@ -164,6 +165,17 @@ def create():
         cursor = g.db.execute('insert into awards(type, recipientName, recipientEmail, creatorEmail, date) values(?, ?, ?, ?, ?)',\
         [form.awardType.data, form.awardRecipientName.data, form.awardRecipientEmail.data, form.awardCreatorEmail.data, form.awardDateTime.data])
         g.db.commit()
+
+        # send the email of the award
+        award = { 
+          'recipientName': form.awardRecipientName.data, 
+          'date': form.awardDateTime.data.strftime("%B %-d, %Y"), 
+          'type': form.awardType.data 
+        }
+        cert = pdfcert("./blank-certificate.jpg")
+        cert.writeAward(award)
+        mailcert(form.awardRecipientEmail.data, 'Interesting subject line goes here.', 'Some message body goes here.', cert.save())
+
         flash('Thanks! Your award has been submitted.')
         return redirect(url_for('create'))
     return render_template('create.html', form=form)

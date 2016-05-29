@@ -12,14 +12,18 @@ class pdfcert:
     self.img = Image.open(imgfile)
 
   def writeAward(self, award):
-    self.write(award['recipientName'], position=(250, 500), color=(10, 150, 77))
-    self.write(award['date'], position=(250, 600), color=(10, 150, 77))
-    self.write(award['type'], position=(250, 700), color=(10, 150, 77))
+    self.write(award['recipientName'], position=(None, 250), color=(54, 67, 47))
+    self.write(award['date'], position=(None, 400), color=(54, 67, 47))
+    self.write(award['type'], position=(None, 100), color=(54, 67, 47), fontsize=75)
 
-  def write(self, text, position, color=(0, 0, 0), ttfFile='DroidSansMono.ttf'):
+  def write(self, text, position, color=(0, 0, 0), ttfFile='broken_planew.ttf', fontsize=50):
     draw = ImageDraw.Draw(self.img)
-    font = ImageFont.truetype(ttfFile, 50)
-    draw.text(position, text, color, font=font)
+    font = ImageFont.truetype(ttfFile, fontsize)
+    posx, posy = position
+    if (posx == None):
+      textw, texth =draw.textsize(text, font=font)
+      posx = (self.img.size[0] - textw) / 2
+    draw.text((posx, posy), text, color, font=font)
 
   def save(self):
     tmp = NamedTemporaryFile(mode='w+b', suffix='pdf')
