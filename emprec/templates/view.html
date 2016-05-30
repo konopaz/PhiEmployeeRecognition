@@ -17,7 +17,12 @@
         <td> {{ award.type }}</td>
         <td> {{ award.creatorEmail }}</td>
         <td> {{ award.date }}</td>
-        <td><button class="btn btn-sm btn-primary resend" type="button" data-id="{{ award.id }}">Resend</button></td>
+        <td>
+          <div class="btn-group" role="group">
+            <button class="btn btn-sm btn-primary resend" type="button" data-id="{{ award.id }}">Resend</button>
+            <a href="/download/{{ award.id }}" target="_blank" class="btn btn-sm btn-primary">Download</a>
+          </div>
+        </td>
       </tr>
       {% endfor %}
     </table>
@@ -31,7 +36,12 @@
         <td> {{ award.type }}</td>
         <td> {{ award.recipientName }} ({{ award.recipientEmail }}) </td>
         <td> {{ award.date }}</td>
-        <td><button class="btn btn-sm btn-primary resend" type="button" data-id="{{ award.id }}">Resend</button></td>
+        <td>
+          <div class="btn-group" role="group">
+            <button class="btn btn-sm btn-primary resend" type="button" data-id="{{ award.id }}">Resend</button>
+            <a href="/download/{{ award.id }}" target="_blank" class="btn btn-sm btn-primary">Download</a>
+          </div>
+        </td>
       </tr>
       {% endfor %}
     </table>

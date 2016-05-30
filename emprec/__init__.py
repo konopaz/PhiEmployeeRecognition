@@ -68,7 +68,7 @@ def testviewpdf():
   award['date'] = datetime.utcnow().strftime("%B %-d, %Y")
   cert = pdfcert("./blank-certificate.jpg")
   cert.writeAward(award)
-  return send_file(cert.save(), as_attachment=False, attachment_filename="testpdf.pdf", mimetype="application/pdf")
+  return send_file(cert.save(), as_attachment=False, attachment_filename="certificate.pdf", mimetype="application/pdf")
 
 @app.route('/testemailpdf')
 def testemailpdf():
@@ -175,7 +175,10 @@ def create():
         }
         cert = pdfcert("./blank-certificate.jpg")
         cert.writeAward(award)
-        mailcert(form.awardRecipientEmail.data, 'Interesting subject line goes here.', 'Some message body goes here.', cert.save())
+        mailcert(form.awardRecipientEmail.data, 
+          'Your %s certificate is here.' % award['type'], 
+          'Please find the certificate attached.', 
+          cert.save())
 
         flash('Thanks! Your award has been submitted.')
         return redirect(url_for('create'))
@@ -192,6 +195,16 @@ def view():
     awardsGiven = awardsGivenQuery.fetchall()
     return render_template('view.html', received=awardsReceived, given=awardsGiven)
 
+@app.route('/download/<int:awardid>')
+@login_required()
+def download(awardid):
+  cursor = g.db.execute("select * from awards where id = %d" % awardid)
+  award = cursor.fetchone()
+  award['date'] = datetime.utcnow().strftime("%B %-d, %Y")
+  cert = pdfcert("./blank-certificate.jpg")
+  cert.writeAward(award)
+  return send_file(cert.save(), as_attachment=False, attachment_filename="certificate.pdf", mimetype="application/pdf")
+
 @app.route('/_sendCert', methods=['POST'])
 @login_required()
 def sendCert():
@@ -203,7 +216,9 @@ def sendCert():
   cert = pdfcert("./blank-certificate.jpg")
   cert.writeAward(award)
   mailcert(award["recipientEmail"],
-    'Your %s certificate is here.' % award['type'], 'Please find the certificate attached.', cert.save())
+    'Your %s certificate is here.' % award['type'], 
+    'Please find the certificate attached.', 
+    cert.save())
 
   data = {
     'success': True
