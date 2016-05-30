@@ -5,7 +5,8 @@ import StringIO, csv
 import json
 from sets import Set
 from flask import Flask, request, session, g, redirect, url_for, \
-  abort, render_template, flash, get_flashed_messages, jsonify, send_file, make_response
+  abort, render_template, flash, get_flashed_messages, jsonify, send_file, make_response, \
+  Response
 from forms import LoginForm, CreateCertificateForm, CreateAccountForm
 from datetime import datetime
 from emprec.pdfcert import pdfcert
@@ -190,6 +191,26 @@ def view():
       [session['username']])
     awardsGiven = awardsGivenQuery.fetchall()
     return render_template('view.html', received=awardsReceived, given=awardsGiven)
+
+@app.route('/_sendCert', methods=['POST'])
+@login_required()
+def sendCert():
+
+  certId = (int)(request.form['id'])
+
+  cursor = g.db.execute("select * from awards where id = %d" % certId)
+  award = cursor.fetchone()
+  cert = pdfcert("./blank-certificate.jpg")
+  cert.writeAward(award)
+  mailcert(award["recipientEmail"],
+    'Your %s certificate is here.' % award['type'], 'Please find the certificate attached.', cert.save())
+
+  data = {
+    'success': True
+  }
+  js = json.dumps(data)
+  resp = Response(js, status=200, mimetype="application/json")
+  return resp
 
 @app.route('/adminQuery')
 @login_required()
