@@ -1,5 +1,7 @@
 $(function() {
   document.getElementById('exportToCSV').style.visibility = 'hidden';
+  google.charts.load('current', {'packages':['corechart', 'table']});
+
 
   $('a#chartHere').bind('click', function() {
     $.getJSON($SCRIPT_ROOT + '/handleQuery', {
@@ -11,25 +13,26 @@ $(function() {
       sortField: $('input[name="sortField"]:checked').val(),
       queryType: $('input[name="queryType"]:checked').val()
     }, function(data) {
+
       document.getElementById('exportToCSV').style.visibility = 'visible';
       console.log(data);
       var chartType = data['final']['chartType'];
       var queryResult = data['final']['queryResults'];
       var queryType = data['final']['queryType'];
+      console.log("Query Type ", queryType);
+      console.log("Query Result: ", queryResult);
+      console.log("Chart Type ", chartType);
+      console.log("Title ", data['final']['title']);
 
-      console.log(queryResult);
-
-      google.charts.load('current', {'packages':['corechart', 'table']});
       google.charts.setOnLoadCallback(drawChart);
 
       function drawChart() {
 
-        var tableData = new google.visualization.DataTable(results);
-        console.log("Results", results);
+        var tableData = new google.visualization.DataTable(queryResult);
 
         console.log(tableData);
         var colTitle1, colTitle2, colTitle3, colTitle4, field, thetype;
-        var chartData = new google.visualization.DataTable(results);
+        var chartData = new google.visualization.DataTable(queryResult);
         if(queryType){
           if(queryType == 'numEachType'){
             colTitle1 = 'Award Type';
@@ -59,10 +62,10 @@ $(function() {
           colTitle3 = 'Date'
           colTitle4 = 'Award Type'
           thetype = 'string';
-          tableData.addColumn(thetype, colTitle3);
-          tableData.addColumn(thetype, colTitle4);
-          tableData.addColumn('string', colTitle1);
+          tableData.addColumn(thetype, colTitle1);
           tableData.addColumn(thetype, colTitle2);
+          tableData.addColumn('string', colTitle3);
+          tableData.addColumn(thetype, colTitle4);
         }
 
         for(var i=0;i<queryResult.length;i++){
@@ -74,9 +77,11 @@ $(function() {
             tableData.addRow([queryResult[i]['awardType'], queryResult[i].numAwards]);
           }else{
             console.log("else");
-            tableData.addRow([queryResult[i]['recipientEmail'], queryResult[i]['creatorEmail'], queryResult[i]['date'], queryResult[i]['type']]);
+              tableData.addRow([queryResult[i]['recipientEmail'], queryResult[i]['creatorEmail'], queryResult[i]['date'], queryResult[i]['type']]);
           }
         }
+        if(queryResult.length == 0)
+          tableData.addRow(['No results found.', '', '', '']);
 
         // Set chart options
         var options = {'title':data['final']['title'], 'width':600, 'height':450};

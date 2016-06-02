@@ -168,16 +168,16 @@ def create():
         g.db.commit()
 
         # send the email of the award
-        award = { 
-          'recipientName': form.awardRecipientName.data, 
-          'date': form.awardDateTime.data.strftime("%B %-d, %Y"), 
-          'type': form.awardType.data 
+        award = {
+          'recipientName': form.awardRecipientName.data,
+          'date': form.awardDateTime.data.strftime("%B %-d, %Y"),
+          'type': form.awardType.data
         }
         cert = pdfcert("./blank-certificate.jpg")
         cert.writeAward(award)
-        mailcert(form.awardRecipientEmail.data, 
-          'Your %s certificate is here.' % award['type'], 
-          'Please find the certificate attached.', 
+        mailcert(form.awardRecipientEmail.data,
+          'Your %s certificate is here.' % award['type'],
+          'Please find the certificate attached.',
           cert.save())
 
         flash('Thanks! Your award has been submitted.')
@@ -216,8 +216,8 @@ def sendCert():
   cert = pdfcert("./blank-certificate.jpg")
   cert.writeAward(award)
   mailcert(award["recipientEmail"],
-    'Your %s certificate is here.' % award['type'], 
-    'Please find the certificate attached.', 
+    'Your %s certificate is here.' % award['type'],
+    'Please find the certificate attached.',
     cert.save())
 
   data = {
@@ -333,13 +333,46 @@ def handleQuery():
             title = "All Awards"
     else:
         app.logger.debug("QUERY TYPE IS NOT SET")
-        queryAllAwards = g.db.execute('select * from awards')
-        awardResults = queryAllAwards.fetchall()
-        app.logger.debug(awardResults)
-        title = "All Awards"
+        # Query for all awards then filter by what the user entered
+        # queryAllAwards = g.db.execute('select * from awards')
+        # awardResults = queryAllAwards.fetchall()
+        # app.logger.debug(awardResults)
+
+        # Handle user input boxes
+        if awardType:
+            app.logger.debug(awardType)
+            queryForAwardType = g.db.execute('select * from awards where type = ?',\
+            [awardType])
+            awardResults = queryForAwardType.fetchall()
+            title = 'All Awards of Type: ' + awardType
+            app.logger.debug(awardResults)
+        elif recipientName:
+            app.logger.debug(recipientName)
+            queryForRecipientName = g.db.execute('select * from awards where recipientName = ?',\
+            [recipientName])
+            awardResults = queryForRecipientName.fetchall()
+            title = 'Number of each type for ' + recipientName
+            app.logger.debug(awardResults)
+        elif recipientEmail:
+            app.logger.debug(recipientEmail)
+            queryForRecipientEmail = g.db.execute('select * from awards where recipientEmail = ?',\
+            [recipientEmail])
+            awardResults = queryForRecipientEmail.fetchall()
+            title = 'Number of each type for ' + recipientEmail
+            app.logger.debug(awardResults)
+        elif creator:
+            app.logger.debug(creator)
+            queryForCreator = g.db.execute('select * from awards where creatorEmail = ?',\
+            [creator])
+            awardResults = queryForCreator.fetchall()
+            app.logger.debug(awardResults)
+        else:
+            queryAllAwards = g.db.execute('select * from awards')
+            awardResults = queryAllAwards.fetchall()
+            app.logger.debug(awardResults)
+            title = "All Awards"
 
     final = {
-        # 'query': results,
         'queryType': queryType,
         'chartType': chartType,
         'queryResults': awardResults,
@@ -347,10 +380,8 @@ def handleQuery():
     };
 
     # pass query back to js to create chart
-    # session['query'] = usersResults
     session['queryResults'] = awardResults
     session['final'] = final
-    # app.logger.debug(results[0]['recipientEmail'])
     return jsonify(final=final)
 
 @app.route('/exportToCSV', methods=['GET', 'POST'])

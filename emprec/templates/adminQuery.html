@@ -9,8 +9,9 @@
 </script>
 
 <div class="container col-xs-6">
-  <h3 class="text-muted">Query</h3>
-  <p>Search by any of the following parameters or choose a default query type in the blue box below. An empty search will return all awards.</p>
+  <h3 class="text-muted">Query Awards</h3>
+  <p>Search by one of the following parameters OR choose a default query in the blue box below.<br>An empty search will return all awards.<br>
+</p>
 <form class="form-horizontal">
   <div class="form-group">
     <label for="type" class="col-sm-4 control-label">Award Type</label>
@@ -36,16 +37,9 @@
       <input type="text" class="form-control" id="creator" placeholder="Creator" name="creator">
     </div>
   </div>
+  <div style="background-color:lightcyan;">
   <div class="form-group">
-    <label for="sort" class="col-sm-4 control-label">Sort By</label>
-    <div class="btn-group col-sm-6">
-      <div class="radio"><label><input type="radio" name="sortField" value="recipientName">Recipient Name</label></div>
-      <div class="radio"><label><input type="radio" name="sortField" value="recipientEmail">Recipient Email</label></div>
-      <div class="radio"><label><input type="radio" name="sortField" value="awardType">Award Type</label></div>
-    </div>
-  </div>
-  <div class="form-group" >
-    <label for="sort" class="col-sm-4 control-label">Type of Query</label>
+    <label for="sort" class="col-sm-4 control-label">Default Queries</label>
     <div class="btn-group col-sm-6" style="background-color:lightcyan;">
       <div class="radio"><label><input type="radio" name="queryType" value="numRcvdPU">Number of awards received per user</label></div>
       <div class="radio"><label><input type="radio" name="queryType" value="numGivenPU">Number of awards given per user</label></div>
@@ -59,6 +53,7 @@
         <div class="radio-inline"><label><input type="radio" name="option" value="bar">Bar</label></div>
       </div>
     </div>
+  </div>
   <div class="form-group">
     <button type="submit" class="btn btn-default" id="exportToCSV">
       <a href="exportToCSV">Export to CSV</a>
