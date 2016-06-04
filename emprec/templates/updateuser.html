@@ -4,15 +4,14 @@
 <div class="container">
 
   <div class="header">
-    <h3 class="text-muted">Edit User</h3>
+    <h3 class="text-muted">Update Name</h3>
+    <h5>Current name: {{ session['name'] }}</h5>
   </div>
 
   <div class="row">
-    <form class="form-horizontal col-xs-6" method="post" action="{{ url_for('editUser', username='None') }}">
+    <form class="form-horizontal col-xs-6" method="post" action="{{ url_for('updateUser') }}">
       {% from '_formhelpers.html' import render_field %}
       {{ render_field(form.newname) }}
-      {{ render_field(form.usertype) }}
-      {{ render_field(form.newusername) }}
       <div class="form-group">
         <div class="col-xs-2">&nbsp;</div>
         <div class="col-xs-6"><button type="submit" class="btn btn-primary">Update</button></div>

@@ -56,6 +56,21 @@ def login_required():
     return wrapped
   return wrapper
 
+def required_roles(*roles):
+   def wrapper(f):
+      @functools.wraps(f)
+      def wrapped(*args, **kwargs):
+        # If an admin user tries to access a regular user page
+         if session['admin'] == True and 'admin' not in roles:
+            return redirect(url_for('home'))
+        # If a regular user tries to access an admin page
+         elif session['admin'] == False and 'admin' in roles:
+            return redirect(url_for('home'))
+         return f(*args, **kwargs)
+      return wrapped
+   return wrapper
+
+
 @app.before_request
 def before_request():
     g.db = sqlite3.connect(app.config['DATABASE'])
@@ -82,10 +97,12 @@ def testemailpdf():
 
 @app.route('/')
 @login_required()
+# Render the home page
 def home():
   return render_template('home.html')
 
 @app.route('/login', methods=['GET', 'POST'])
+# Log the user in
 def login():
   form = LoginForm(request.form)
   if request.method == 'POST' and form.validate():
@@ -96,6 +113,7 @@ def login():
     app.logger.debug(row)
     if row is not None:
       session['username'] = form.username.data
+      session['name'] = row['name']
       if row['usertype'] == 'admin':
           session['admin'] = True
       return redirect(url_for('home'))
@@ -103,6 +121,8 @@ def login():
 
 @app.route('/addUser', methods=['GET', 'POST'])
 @login_required()
+@required_roles('admin')
+# Allow an admin to add a new user
 def addUser():
     form = CreateAccountForm(request.form)
     if request.method == 'POST' and form.validate():
@@ -118,10 +138,8 @@ def addUser():
             app.logger.debug('New user created')
             allUsersQuery = g.db.execute('select * from users')
             allUsers = allUsersQuery.fetchall()
-            # session['data'] = {'allUsers': allUsers, 'form': form, 'message': 'User has been addedd'}
             session['message'] = { 'message': 'User has been added'}
             return redirect(url_for('userOptions'))
-            # return render_template('useroptions.html', form=form, message="User has been added", allUsers=allUsers)
         else:
             app.logger.debug("User is not logged in- a new user is being created")
             app.logger.debug("Form field has data")
@@ -138,6 +156,7 @@ def addUser():
     return render_template('adduser.html', form=form, title=title)
 
 @app.route('/createAccount', methods=['GET', 'POST'])
+# Create a new account
 def createAccount():
     app.logger.debug('In create account!')
     form = CreateAccountForm(request.form)
@@ -156,6 +175,8 @@ def createAccount():
 
 @app.route('/create', methods=['GET', 'POST'])
 @login_required()
+@required_roles('regular')
+# Create a new award
 def create():
     form = CreateCertificateForm(request.form)
     #prefill form with user's username (should be their email)
@@ -186,6 +207,8 @@ def create():
 
 @app.route('/view')
 @login_required()
+@required_roles('regular')
+# Show all awards received and given by the logged-in user
 def view():
     awardsReceivedQuery = g.db.execute('select * from awards where recipientEmail = ?',\
       [session['username']])
@@ -197,6 +220,7 @@ def view():
 
 @app.route('/download/<int:awardid>')
 @login_required()
+# Allow user to download a copy of an award
 def download(awardid):
   cursor = g.db.execute("select * from awards where id = %d" % awardid)
   award = cursor.fetchone()
@@ -207,6 +231,7 @@ def download(awardid):
 
 @app.route('/_sendCert', methods=['POST'])
 @login_required()
+# Send certificate to the award recipient
 def sendCert():
 
   certId = (int)(request.form['id'])
@@ -229,11 +254,15 @@ def sendCert():
 
 @app.route('/adminQuery')
 @login_required()
+@required_roles('admin')
+# load the admin query page
 def adminQuery():
     return render_template('adminQuery.html')
 
 @app.route('/userOptions')
 @login_required()
+@required_roles('admin')
+# load the user options admin page
 def userOptions():
     form = CreateAccountForm(request.form)
     allUsersQuery = g.db.execute('select * from users')
@@ -246,8 +275,22 @@ def userOptions():
         message = ''
     return render_template('userOptions.html', allUsers=allUsers, form=form , message=message)
 
+@app.route('/updateUser/', methods=['GET', 'POST'])
+@login_required()
+# Update the logged-in users' name
+def updateUser():
+    form = CreateAccountForm(request.form)
+    if request.method == 'POST':
+        updateName = g.db.execute('update users set name=? where username=? and name=?', \
+        [form.newname.data, session['username'], session['name']])
+        g.db.commit()
+        session['name'] = form.newname.data
+    return render_template('updateuser.html', form=form)
+
 @app.route('/editUser/<username>/', methods=['GET', 'POST'])
 @login_required()
+@required_roles('admin')
+# Allow admin to edit a users' username, date, and/or user type
 def editUser(username):
     form = CreateAccountForm(request.form)
     app.logger.debug("Username", username)
@@ -275,6 +318,8 @@ def editUser(username):
 
 @app.route('/deleteUser/<username>')
 @login_required()
+@required_roles('admin')
+# Allow an admin to remove a user from the database
 def deleteUser(username):
     form = CreateAccountForm(request.form)
     app.logger.debug(username)
@@ -289,12 +334,13 @@ def deleteUser(username):
 
 @app.route('/handleQuery')
 @login_required()
+@required_roles('admin')
+# Handle an admin query of the awards
 def handleQuery():
     awardType = request.args.get('type')
     recipientName = request.args.get('recipientName')
     recipientEmail = request.args.get('recipientEmail')
     creator = request.args.get('creator')
-    # date = request.args.get('date')
     sortField = request.args.get('sortField')
     queryType = request.args.get('queryType')
     chartType = request.args.get('chartType')
@@ -333,10 +379,6 @@ def handleQuery():
             title = "All Awards"
     else:
         app.logger.debug("QUERY TYPE IS NOT SET")
-        # Query for all awards then filter by what the user entered
-        # queryAllAwards = g.db.execute('select * from awards')
-        # awardResults = queryAllAwards.fetchall()
-        # app.logger.debug(awardResults)
 
         # Handle user input boxes
         if awardType:
@@ -386,6 +428,8 @@ def handleQuery():
 
 @app.route('/exportToCSV', methods=['GET', 'POST'])
 @login_required()
+@required_roles('admin')
+# Export admin query to a csv file
 def exportToCSV():
     si = StringIO.StringIO()
     cw = csv.writer(si)
@@ -415,6 +459,7 @@ def exportToCSV():
     return output
 
 @app.route('/logout')
+# Log the user out
 def logout():
   session.clear()
   return redirect(url_for('login'))
